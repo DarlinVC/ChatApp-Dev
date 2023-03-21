@@ -17,8 +17,8 @@ Esta es una aplicacion de chat que estoy desarrollando, subire actualizaciones t
 
 1. Este proyecto esta creado con typescript, usando NodeJs, y las librerias socket.io y express.js
 2. Este Readme se ira actualizando...
-
-
+<br>
+<br>
 # English
 
 This is a chat application that I am developing, I will upload updates every day.
