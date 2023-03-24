@@ -12,6 +12,7 @@ import passport from "passport";
 
 export const router = Express.Router();
 
+// users router
 router.post("/signUp", verifyUserSignUp(), userController.signUp);
 router.post("/signIn", verifyUserSignIn(), userController.signIn);
 router.post(
@@ -20,7 +21,6 @@ router.post(
   verifyFriendRequest(),
   userController.friendRequest
 );
-
 router.post(
   "/acceptFriendRequest",
   passport.authenticate("jwt", { session: false }),
