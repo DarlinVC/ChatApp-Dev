@@ -7,6 +7,12 @@ import { getUsername } from "../utils/getUsername";
 import Users from "../models/user.model";
 
 class userController {
+  /**
+   *
+   * @param req
+   * @param res
+   * @returns action and successfull = User created successfully.
+   */
   async signUp(req: Request, res: Response): Promise<Response> {
     try {
       // handle validation errors...
@@ -14,7 +20,6 @@ class userController {
       if (!errors.isEmpty()) {
         return res.status(400).json({ errors: errors.array() });
       }
-
       const user = new Users(req.body);
       await user.save();
       return res.status(201).send({
@@ -35,6 +40,12 @@ class userController {
       });
     }
   }
+  /**
+   *
+   * @param req
+   * @param res
+   * @returns jwt token.
+   */
   async signIn(req: Request, res: Response): Promise<Response> {
     try {
       // handle validation errors...
@@ -42,7 +53,6 @@ class userController {
       if (!errors.isEmpty()) {
         return res.status(400).json({ errors: errors.array() });
       }
-
       const user = await Users.findOne({ username: req.body.username });
       if (!user)
         return res.status(404).send({
@@ -128,6 +138,51 @@ class userController {
       action: "friendRequest",
       msg: "successfull",
     });
+  }
+  async FriendRequestAccept(req: Request, res: Response): Promise<Response> {
+    try {
+      const params = req.body;
+      const requestedUser = await getUsername(
+        jwtPayload(req.headers.authorization).id
+      );
+
+      // middlewares errors
+      const errors = validationResult(req);
+      if (!errors.isEmpty()) {
+        return res.status(400).json({ errors: errors.array() });
+      }
+
+      // Remove the applicant and sender from the friend requests list
+      await Users.findOneAndUpdate(
+        { username: requestedUser },
+        { $pull: { friendsRequestReceived: { user: params.sender } } }
+      );
+      await Users.findOneAndUpdate(
+        { username: params.sender },
+        { $pull: { friendsRequestSent: { user: requestedUser } } }
+      );
+
+      // add both users to your friends list
+      await Users.findOneAndUpdate(
+        { username: requestedUser },
+        { $addToSet: { friends: { user: params.sender } } }
+      );
+      await Users.findOneAndUpdate(
+        { username: params.sender },
+        { $addToSet: { friends: { user: requestedUser } } }
+      );
+
+      // return all its okay
+      return res.status(200).send({
+        action: "acceptFriendRequested",
+        msg: "successfull",
+      });
+    } catch (e) {
+      return res.status(500).send({
+        action: "acceptFriendRequested",
+        msg: "ErrorServer",
+      });
+    }
   }
 }
 

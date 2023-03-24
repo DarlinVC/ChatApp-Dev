@@ -3,7 +3,8 @@ import Express from "express";
 import {
   checkUserSignUp,
   checkUserSignIn,
-  checkFriendRequest,
+  verifyFriendRequest,
+  verifyFriendRequestAccept
 } from "../middlewares/user.middlewares";
 // controllers
 import userController from "../controllers/user.controller";
@@ -16,6 +17,13 @@ router.post("/signIn", checkUserSignIn(), userController.signIn);
 router.post(
   "/friendRequest",
   passport.authenticate("jwt", { session: false }),
-  checkFriendRequest(),
+  verifyFriendRequest(),
   userController.friendRequest
+);
+
+router.post(
+  "/acceptFriendRequest",
+  passport.authenticate("jwt", { session: false }),
+  verifyFriendRequestAccept(),
+  userController.FriendRequestAccept
 );

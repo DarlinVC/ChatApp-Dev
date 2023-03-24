@@ -1,5 +1,8 @@
 import { body } from "express-validator";
 import Users from "../models/user.model";
+// utils
+//import { jwtPayload } from "../utils/handle.jwt";
+//import { getUsername } from "../utils/getUsername";
 
 export const checkUserSignUp = () => {
   return [
@@ -39,7 +42,7 @@ export const checkUserSignIn = () => {
   ];
 };
 
-export const checkFriendRequest = () => {
+export const verifyFriendRequest = () => {
   return [
     body("friend")
       .trim()
@@ -48,20 +51,43 @@ export const checkFriendRequest = () => {
       .withMessage("fieldIsRequired")
       .custom(async (value, { req }) => {
         const userRequesting = req.user.username;
-        const friend = await Users.findOne({ username: value });
-        if (!friend) {
-          throw new Error("FriendNotFound.");
+        const friendRequested = await Users.findOne({ username: value });
+        if (!friendRequested) {
+          throw new Error("FriendRequestedNotFound");
         }
-        const isAlreadyFriend = friend.friends.some(
+        const isAlreadyFriend = friendRequested.friends.some(
           (friend: any) => friend.user === userRequesting
         );
-        const hasSentFriendRequest = friend.friendsRequestReceived.some(
-          (request: any) => request.user === userRequesting
-        );
+        const hasSentFriendRequest =
+          friendRequested.friendsRequestReceived.some(
+            (request: any) => request.user === userRequesting
+          );
         if (isAlreadyFriend) {
           throw new Error("AlreadyFriends");
         } else if (hasSentFriendRequest) {
           throw new Error("AlreadyFriendRequestSent");
+        }
+      }),
+  ];
+};
+
+export const verifyFriendRequestAccept = () => {
+  return [
+    body("sender")
+      .trim()
+      .not()
+      .isEmpty()
+      .withMessage("fieldIsRequired")
+      .custom(async (value, { req }) => {
+        const userRequesting = req.user.username;
+        const friendRequested: any = await Users.findOne({ username: value });
+        if (friendRequested) {
+          if (friendRequested === userRequesting)
+            throw new Error("CantAcceptFriendRequestYourself");
+          const isAlreadyFriend = friendRequested.friends.some(
+            (friend: any) => friend.user === userRequesting
+          );
+          if (isAlreadyFriend) throw new Error("AlreadyFriends");
         }
       }),
   ];

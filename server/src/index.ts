@@ -4,7 +4,7 @@ import mongoose from "mongoose";
 import bodyParser from "body-parser";
 import http from "http";
 import { Server as WebSocketServer } from "socket.io";
-import passport from 'passport';
+import passport from "passport";
 
 // Docs
 import config from "./config/config";
@@ -39,7 +39,6 @@ class ChatApp {
     this.app.use(bodyParser.json());
     this.app.use(passport.initialize());
     passport.use(passportMiddleware);
-
     this.app.use("/api", this.router);
   }
 
