@@ -1,8 +1,8 @@
 import Express from "express";
 // middlewares
 import {
-  checkUserSignUp,
-  checkUserSignIn,
+  verifyUserSignUp,
+  verifyUserSignIn,
   verifyFriendRequest,
   verifyFriendRequestAccept
 } from "../middlewares/user.middlewares";
@@ -12,8 +12,8 @@ import passport from "passport";
 
 export const router = Express.Router();
 
-router.post("/signUp", checkUserSignUp(), userController.signUp);
-router.post("/signIn", checkUserSignIn(), userController.signIn);
+router.post("/signUp", verifyUserSignUp(), userController.signUp);
+router.post("/signIn", verifyUserSignIn(), userController.signIn);
 router.post(
   "/friendRequest",
   passport.authenticate("jwt", { session: false }),

@@ -4,7 +4,7 @@ import Users from "../models/user.model";
 //import { jwtPayload } from "../utils/handle.jwt";
 //import { getUsername } from "../utils/getUsername";
 
-export const checkUserSignUp = () => {
+export const verifyUserSignUp = () => {
   return [
     body("username")
       .trim()
@@ -25,7 +25,7 @@ export const checkUserSignUp = () => {
   ];
 };
 
-export const checkUserSignIn = () => {
+export const verifyUserSignIn = () => {
   return [
     body("username")
       .trim()
