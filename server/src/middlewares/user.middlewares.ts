@@ -50,17 +50,17 @@ export const verifyFriendRequest = () => {
       .isEmpty()
       .withMessage("fieldIsRequired")
       .custom(async (value, { req }) => {
-        const userRequesting = req.user.username;
-        const friendRequested = await Users.findOne({ username: value });
-        if (!friendRequested) {
+        const receiver = req.user.username;
+        const sender = await Users.findOne({ username: value });
+        if (!sender) {
           throw new Error("FriendRequestedNotFound");
         }
-        const isAlreadyFriend = friendRequested.friends.some(
-          (friend: any) => friend.user === userRequesting
+        const isAlreadyFriend = sender.friends.some(
+          (friend: any) => friend.user === receiver
         );
         const hasSentFriendRequest =
-          friendRequested.friendsRequestReceived.some(
-            (request: any) => request.user === userRequesting
+          sender.friendsRequestReceived.some(
+            (request: any) => request.user === receiver
           );
         if (isAlreadyFriend) {
           throw new Error("AlreadyFriends");
@@ -86,13 +86,13 @@ export const verifyFriendRequestAccept = () => {
       .isEmpty()
       .withMessage("fieldIsRequired")
       .custom(async (value, { req }) => {
-        const userRequesting = req.user.username;
-        const friendRequested: any = await Users.findOne({ username: value });
-        if (friendRequested) {
-          if (friendRequested === userRequesting)
+        const receiver = req.user.username;
+        const sender: any = await Users.findOne({ username: value });
+        if (sender) {
+          if (sender === receiver)
             throw new Error("CantAcceptFriendRequestYourself");
-          const isAlreadyFriend = friendRequested.friends.some(
-            (friend: any) => friend.user === userRequesting
+          const isAlreadyFriend = sender.friends.some(
+            (friend: any) => friend.user === receiver
           );
           if (isAlreadyFriend) throw new Error("AlreadyFriends");
         }

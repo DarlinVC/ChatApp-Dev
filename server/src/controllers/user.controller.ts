@@ -89,7 +89,7 @@ class userController {
    */
   async friendRequest(req: Request, res: Response): Promise<Response> {
     // Get the username of the authenticated user from the JWT token.
-    const userMain = await getUsername(
+    const sendingUser = await getUsername(
       jwtPayload(req.headers.authorization).id
     );
 
@@ -99,25 +99,25 @@ class userController {
       return res.status(400).json({ errors: errors.array() });
     }
 
-    if (userMain == req.body.friend)
+    if (sendingUser == req.body.FriendRequested)
       return res.status(409).send({
         action: "friendRequest",
         msg: "CantSendRequestYourself",
       });
     /* Find the friend in the database and add a friend
     request to their received requests. */
-    const friend = await Users.findOneAndUpdate(
-      { username: req.body.friend },
+    const friendRequested = await Users.findOneAndUpdate(
+      { username: req.body.FriendRequested },
       {
         $addToSet: {
           friendsRequestReceived: {
-            user: userMain,
+            user: sendingUser,
           },
         },
       }
     );
     // If the friend is not found, return an error response.
-    if (!friend) {
+    if (!friendRequested) {
       return res.status(404).send({
         action: "friendRequest",
         msg: "userFriendNotFound",
@@ -125,11 +125,11 @@ class userController {
     }
     // Add the friend request to the authenticated user's sent requests.
     await Users.findOneAndUpdate(
-      { username: userMain },
+      { username: sendingUser },
       {
         $addToSet: {
           friendsRequestSent: {
-            user: friend.username,
+            user: friendRequested.username,
           },
         },
       }
@@ -150,7 +150,7 @@ class userController {
   async FriendRequestAccept(req: Request, res: Response): Promise<Response> {
     try {
       const params = req.body;
-      const requestedUser = await getUsername(
+      const receiver = await getUsername(
         jwtPayload(req.headers.authorization).id
       );
 
@@ -162,22 +162,22 @@ class userController {
 
       // Remove the applicant and sender from the friend requests list
       await Users.findOneAndUpdate(
-        { username: requestedUser },
+        { username: receiver },
         { $pull: { friendsRequestReceived: { user: params.sender } } }
       );
       await Users.findOneAndUpdate(
         { username: params.sender },
-        { $pull: { friendsRequestSent: { user: requestedUser } } }
+        { $pull: { friendsRequestSent: { user: receiver } } }
       );
 
       // add both users to your friends list
       await Users.findOneAndUpdate(
-        { username: requestedUser },
+        { username: receiver },
         { $addToSet: { friends: { user: params.sender } } }
       );
       await Users.findOneAndUpdate(
         { username: params.sender },
-        { $addToSet: { friends: { user: requestedUser } } }
+        { $addToSet: { friends: { user: receiver } } }
       );
 
       // return all its okay
