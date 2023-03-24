@@ -71,6 +71,13 @@ export const verifyFriendRequest = () => {
   ];
 };
 
+/**
+ * 
+ * @returns ...
+ * @description It is verified if the user who sent the request exists, if it exists,
+ *  then it proceeds with the verification of if the user is not trying in some
+ *  way to accept himself and generate an error, and also if the user is already in the friends list .
+ */
 export const verifyFriendRequestAccept = () => {
   return [
     body("sender")

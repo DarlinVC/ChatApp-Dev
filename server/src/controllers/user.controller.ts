@@ -139,6 +139,14 @@ class userController {
       msg: "successfull",
     });
   }
+  /**
+   *
+   * @param req
+   * @param res
+   * @returns successfull or Error server
+   * @description Both users are removed from sent and received requests to
+   *  later add both to the friends list.
+   */
   async FriendRequestAccept(req: Request, res: Response): Promise<Response> {
     try {
       const params = req.body;
