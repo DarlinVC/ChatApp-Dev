@@ -3,7 +3,7 @@
 import { Schema, model, Document } from "mongoose";
 
 export interface IChat extends Document {
-  RoomName: string;
+  roomName: string;
   chat: [
     {
       user: string;
@@ -13,7 +13,7 @@ export interface IChat extends Document {
 }
 
 const ChatSchema = new Schema({
-  RoomName: {
+  roomName: {
     type: String,
     required: true,
     unique: true,

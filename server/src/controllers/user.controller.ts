@@ -1,10 +1,13 @@
 import { Request, Response } from "express";
 import { validationResult } from "express-validator";
+import { v4 as uuidv4 } from "uuid";
 // utils
-import { createToken, jwtPayload } from "../utils/handle.jwt";
+import { createToken, jwtPayload } from "../utils/jwt";
 import { getUsername } from "../utils/getUsername";
 // models
-import Users from "../models/user.model";
+import { Users, IUser } from "../models/user.model";
+// handlers
+import { createChat } from "../handlers/rooms.handler";
 
 class userController {
   /**
@@ -20,7 +23,7 @@ class userController {
       if (!errors.isEmpty()) {
         return res.status(400).json({ errors: errors.array() });
       }
-      const user = new Users(req.body);
+      const user = new Users<IUser>(req.body);
       await user.save();
       return res.status(201).send({
         action: "SavingUser",
@@ -99,15 +102,15 @@ class userController {
       return res.status(400).json({ errors: errors.array() });
     }
 
-    if (sendingUser == req.body.FriendRequested)
+    if (sendingUser == req.body.friendRequested)
       return res.status(409).send({
         action: "friendRequest",
         msg: "CantSendRequestYourself",
       });
     /* Find the friend in the database and add a friend
     request to their received requests. */
-    const friendRequested = await Users.findOneAndUpdate(
-      { username: req.body.FriendRequested },
+    await Users.findOneAndUpdate(
+      { username: req.body.friendRequested },
       {
         $addToSet: {
           friendsRequestReceived: {
@@ -116,20 +119,13 @@ class userController {
         },
       }
     );
-    // If the friend is not found, return an error response.
-    if (!friendRequested) {
-      return res.status(404).send({
-        action: "friendRequest",
-        msg: "userFriendNotFound",
-      });
-    }
     // Add the friend request to the authenticated user's sent requests.
     await Users.findOneAndUpdate(
       { username: sendingUser },
       {
         $addToSet: {
           friendsRequestSent: {
-            user: friendRequested.username,
+            user: req.body.friendRequested,
           },
         },
       }
@@ -170,15 +166,22 @@ class userController {
         { $pull: { friendsRequestSent: { user: receiver } } }
       );
 
+      // Create chat room name automatically
+      const roomName = uuidv4();
+
       // add both users to your friends list
       await Users.findOneAndUpdate(
         { username: receiver },
-        { $addToSet: { friends: { user: params.sender } } }
+        { $addToSet: { friends: { user: params.sender, chatRoom: roomName } } }
       );
       await Users.findOneAndUpdate(
         { username: params.sender },
-        { $addToSet: { friends: { user: receiver } } }
+        { $addToSet: { friends: { user: receiver, chatRoom: roomName } } }
       );
+
+      const chat = await createChat(roomName);
+
+      if (chat === "Error") throw new Error();
 
       // return all its okay
       return res.status(200).send({

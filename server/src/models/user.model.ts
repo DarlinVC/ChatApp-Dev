@@ -23,7 +23,7 @@ export interface IUser extends Document {
   comparePassword: (password: string) => Promise<boolean>;
 }
 
-const userSchema = new Schema({
+const userSchema = new Schema<IUser>({
   username: {
     type: String,
     required: true,
@@ -80,4 +80,4 @@ userSchema.methods.comparePassword = async function (
   return await bcrypt.compare(password, this.password);
 };
 
-export default model<IUser>("users", userSchema);
+export const Users = model<IUser>("users", userSchema);

@@ -1,4 +1,4 @@
-import Users from "../models/user.model";
+import { Users } from "../models/user.model";
 
 /**
  * Gets the username associated with a specific user ID.

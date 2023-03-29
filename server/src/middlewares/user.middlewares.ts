@@ -1,5 +1,5 @@
 import { body } from "express-validator";
-import Users from "../models/user.model";
+import { Users } from "../models/user.model";
 // utils
 //import { jwtPayload } from "../utils/handle.jwt";
 //import { getUsername } from "../utils/getUsername";
@@ -44,7 +44,7 @@ export const verifyUserSignIn = () => {
 
 export const verifyFriendRequest = () => {
   return [
-    body("friend")
+    body("friendRequested")
       .trim()
       .not()
       .isEmpty()
