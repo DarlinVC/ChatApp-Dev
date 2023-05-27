@@ -19,7 +19,6 @@ export default (io: any) => {
     if (response !== null) {
       const friends: IFriends[] = response.friends;
       friends.forEach((e: IFriends) => {
-        console.log(e.chatRoom);
         socket.join(e.chatRoom);
       });
     }
@@ -32,7 +31,6 @@ export default (io: any) => {
       if (response !== null) {
         const friends: IFriends[] = response.friends;
         friends.forEach((e: IFriends) => {
-          console.log(e.chatRoom);
           socket.leave(e.chatRoom);
         });
       }
