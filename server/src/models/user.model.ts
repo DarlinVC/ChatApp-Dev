@@ -81,15 +81,17 @@ userSchema.post<IUser>(
   async function (this: any, next: NextFunction) {
     const update = this.getUpdate();
 
-    const cases: any = {
+    // To save all the functions that will be executed when a push is executed
+    const casesPush: any = {
       friendsRequestReceived: notifyFriendRequest,
     };
 
     if (update.$push) {
+      // if the action exist in the "casesPush", that function will be execute
       const action = Object.keys(update.$push)[0];
-      for (const key in cases) {
-        if (action.toString() === key) {
-          cases[key]();
+      for (const cases in casesPush) {
+        if (action.toString() === cases) {
+          casesPush[cases]();
         }
       }
     }
