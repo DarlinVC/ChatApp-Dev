@@ -7,10 +7,10 @@ export default (io: any) => {
   io.on("connection", async (socket: any) => {
     console.log("new conection: " + socket.id);
     if (!socket.handshake.headers.authorization) {
-      socket.emit("tokenError", "Se espera un token");
+      socket.emit("tokenError", "tokenExpected");
       return;
     }
-    
+
     const user: String = await getUsername(
       jwtPayload(socket.handshake.headers.authorization.toString()).id
     ) as string;
