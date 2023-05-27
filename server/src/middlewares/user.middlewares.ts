@@ -58,10 +58,9 @@ export const verifyFriendRequest = () => {
         const isAlreadyFriend = sender.friends.some(
           (friend: any) => friend.user === receiver
         );
-        const hasSentFriendRequest =
-          sender.friendsRequestReceived.some(
-            (request: any) => request.user === receiver
-          );
+        const hasSentFriendRequest = sender.friendsRequestReceived.some(
+          (request: any) => request.user === receiver
+        );
         if (isAlreadyFriend) {
           throw new Error("AlreadyFriends");
         } else if (hasSentFriendRequest) {
@@ -72,7 +71,7 @@ export const verifyFriendRequest = () => {
 };
 
 /**
- * 
+ *
  * @returns ...
  * @description It is verified if the user who sent the request exists, if it exists,
  *  then it proceeds with the verification of if the user is not trying in some
@@ -86,16 +85,25 @@ export const verifyFriendRequestAccept = () => {
       .isEmpty()
       .withMessage("fieldIsRequired")
       .custom(async (value, { req }) => {
-        const receiver = req.user.username;
-        const sender: any = await Users.findOne({ username: value });
+        const receiver = await Users.findOne({ username: req.user.username });
+        if (!receiver) throw new Error("YourUsernameInvalid");
+        const sender: any = await Users.findOne({ username: value }); 
         if (sender) {
-          if (sender === receiver)
+          if (sender.username === receiver.username)
             throw new Error("CantAcceptFriendRequestYourself");
           const isAlreadyFriend = sender.friends.some(
-            (friend: any) => friend.user === receiver
+            (friend: any) => friend.user === receiver.username
           );
           if (isAlreadyFriend) throw new Error("AlreadyFriends");
         }
+
+        // check if sender is in received friend request.
+        const senderExistFriendsRequestReceived =
+          receiver.friendsRequestReceived.some(
+            (e: any) => e.user === sender.username
+          );
+        if (!senderExistFriendsRequestReceived)
+          throw new Error("ThisUserNotSentYouFriendRequest");
       }),
   ];
 };

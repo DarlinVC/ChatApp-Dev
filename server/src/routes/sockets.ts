@@ -1,6 +1,6 @@
 export default (io: any) => {
   io.on("connection", (socket: any) => {
-    console.log("new conection: " + socket.id);
+    console.log("new conection: " + socket.id); 
 
     // chat.controller
     socket.on("disconnect", () => {

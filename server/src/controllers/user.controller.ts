@@ -112,10 +112,8 @@ class userController {
     await Users.findOneAndUpdate(
       { username: req.body.friendRequested },
       {
-        $addToSet: {
-          friendsRequestReceived: {
-            user: sendingUser,
-          },
+        $push: {
+          friendsRequestReceived: { user: sendingUser },
         },
       }
     );
@@ -123,7 +121,7 @@ class userController {
     await Users.findOneAndUpdate(
       { username: sendingUser },
       {
-        $addToSet: {
+        $push: {
           friendsRequestSent: {
             user: req.body.friendRequested,
           },
@@ -135,6 +133,7 @@ class userController {
       msg: "successfull",
     });
   }
+  
   /**
    *
    * @param req
@@ -172,11 +171,11 @@ class userController {
       // add both users to your friends list
       await Users.findOneAndUpdate(
         { username: receiver },
-        { $addToSet: { friends: { user: params.sender, chatRoom: roomName } } }
+        { $push: { friends: { user: params.sender, chatRoom: roomName } } }
       );
       await Users.findOneAndUpdate(
         { username: params.sender },
-        { $addToSet: { friends: { user: receiver, chatRoom: roomName } } }
+        { $push: { friends: { user: receiver, chatRoom: roomName } } }
       );
 
       const chat = await createChat(roomName);

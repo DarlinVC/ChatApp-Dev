@@ -50,6 +50,7 @@ class ChatApp {
 
   private connectDB() {
     mongoose.Promise = global.Promise;
+
     mongoose.set("strictQuery", false);
     mongoose
       .connect(config.DB.URL as string)

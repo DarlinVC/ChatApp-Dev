@@ -1,69 +1,65 @@
-import { Schema, model, Document } from "mongoose";
+import mongoose, { Schema, Document } from "mongoose";
 import bcrypt from "bcrypt";
+import { NextFunction } from "express";
+
+import { notifyFriendRequest } from "../handlers/socket-handlers/friendsRequest.handler";
 
 export interface IUser extends Document {
   username: string;
   password: string;
-  friendsRequestReceived: [
-    {
-      user: string;
-    }
-  ];
-  friendsRequestSent: [
-    {
-      user: string;
-    }
-  ];
-  friends: [
-    {
-      user: string;
-      chatRoom: string;
-    }
-  ];
+  friendsRequestReceived: [{ user: string }];
+  friendsRequestSent: [{ user: string }];
+  friends: [{ user: string; chatRoom: string }];
   comparePassword: (password: string) => Promise<boolean>;
 }
 
-const userSchema = new Schema<IUser>({
-  username: {
-    type: String,
-    required: true,
-    unique: true,
-    trim: true,
+export const userSchema = new Schema<IUser>(
+  {
+    username: {
+      type: String,
+      required: true,
+      unique: true,
+      trim: true,
+    },
+    password: {
+      type: String,
+      required: true,
+      trim: true,
+    },
+    friendsRequestReceived: [
+      {
+        user: {
+          type: String,
+          trim: true,
+        },
+      },
+    ],
+    friendsRequestSent: [
+      {
+        user: {
+          type: String,
+          trim: true,
+        },
+      },
+    ],
+    friends: [
+      {
+        user: {
+          type: String,
+          trim: true,
+        },
+        chatRoom: {
+          type: String,
+          trim: true,
+        },
+      },
+    ],
   },
-  password: {
-    type: String,
-    required: true,
-    trim: true,
-  },
-  friendsRequestReceived: [
-    {
-      user: {
-        type: String,
-        trim: true,
-      },
-    },
-  ],
-  friendsRequestSent: [
-    {
-      user: {
-        type: String,
-        trim: true,
-      },
-    },
-  ],
-  friends: [
-    {
-      user: {
-        type: String,
-        trim: true,
-      },
-      chatRoom: {
-        type: String,
-        trim: true,
-      },
-    },
-  ],
-});
+  {
+    collection: "users",
+    timestamps: true,
+  }
+);
 
 userSchema.pre<IUser>("save", async function (next) {
   const user = this;
@@ -80,4 +76,25 @@ userSchema.methods.comparePassword = async function (
   return await bcrypt.compare(password, this.password);
 };
 
-export const Users = model<IUser>("users", userSchema);
+userSchema.post<IUser>(
+  "findOneAndUpdate",
+  async function (this: any, next: NextFunction) {
+    const update = this.getUpdate();
+
+    const cases: any = {
+      friendsRequestReceived: notifyFriendRequest,
+    };
+
+    if (update.$push) {
+      const action = Object.keys(update.$push)[0];
+      for (const key in cases) {
+        if (action.toString() === key) {
+          cases[key]();
+        }
+      }
+    }
+    next;
+  }
+);
+
+export const Users = mongoose.model<IUser>("users", userSchema);
