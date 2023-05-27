@@ -1,6 +1,6 @@
 import { jwtPayload } from "../utils/jwt";
 import { getUsername } from "../utils/getUsername";
-import { Users, IUser } from "../models/user.model";
+import { Users } from "../models/user.model";
 import { IFriends } from "../models/interfaces/friends.interface";
 
 export default (io: any) => {
@@ -10,22 +10,32 @@ export default (io: any) => {
       socket.emit("tokenError", "tokenExpected");
       return;
     }
+    const token = `Bearer ${socket.handshake.headers.authorization}`;
+    const user: String = (await getUsername(jwtPayload(token).id)) as string;
 
-    const user: String = await getUsername(
-      jwtPayload(socket.handshake.headers.authorization.toString()).id
-    ) as string;
-    
     // joins to all chats when the user is ON.
-    Users.findOne({username: user}, (_err: Error, response: IUser)=> {
+    const response = await Users.findOne({ username: user }).exec();
+
+    if (response !== null) {
       const friends: IFriends[] = response.friends;
-      friends.forEach((e: IFriends)=>{
+      friends.forEach((e: IFriends) => {
+        console.log(e.chatRoom);
         socket.join(e.chatRoom);
       });
-    });
+    }
 
     // closing...
     socket.on("disconnect", () => {
       console.log("Client Disconnect: " + socket.id);
+
+      // closing chat rooms.
+      if (response !== null) {
+        const friends: IFriends[] = response.friends;
+        friends.forEach((e: IFriends) => {
+          console.log(e.chatRoom);
+          socket.leave(e.chatRoom);
+        });
+      }
     });
   });
 };
