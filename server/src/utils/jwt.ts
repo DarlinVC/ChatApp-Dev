@@ -6,7 +6,7 @@ function createToken(id: string) {
 }
 
 // Get user-sent token payload.
-function jwtPayload(reqToken: any) {
+function jwtPayload(reqToken: string) {
   return jwt.verify(
     reqToken?.split(" ")[1] as string,
     config.JWT_SECRET_KEY as string

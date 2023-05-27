@@ -64,12 +64,13 @@ class userController {
           token: "",
         });
       const isMatch = await user.comparePassword(req.body.password);
-      if (isMatch)
+      if (isMatch) {
         return res.status(200).send({
           action: "LogIn",
           msg: "Successfull",
           token: createToken(user._id.toString()),
         });
+      }
       return res.status(400).send({
         action: "LogIn",
         msg: "FieldsInvalids",
@@ -91,16 +92,20 @@ class userController {
    *          successful or not.
    */
   async friendRequest(req: Request, res: Response): Promise<Response> {
-    // Get the username of the authenticated user from the JWT token.
-    const sendingUser = await getUsername(
-      jwtPayload(req.headers.authorization).id
-    );
-
     // handle validation errors...
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
       return res.status(400).json({ errors: errors.array() });
     }
+    if (!req.headers.authorization)
+      return res.status(401).send({
+        action: "friendRequest",
+        msg: "tokenError",
+      });
+    // Get the username of the authenticated user from the JWT token.
+    const sendingUser = await getUsername(
+      jwtPayload(req.headers.authorization).id
+    );
 
     if (sendingUser == req.body.friendRequested)
       return res.status(409).send({
@@ -133,7 +138,7 @@ class userController {
       msg: "successfull",
     });
   }
-  
+
   /**
    *
    * @param req
@@ -144,16 +149,21 @@ class userController {
    */
   async FriendRequestAccept(req: Request, res: Response): Promise<Response> {
     try {
-      const params = req.body;
-      const receiver = await getUsername(
-        jwtPayload(req.headers.authorization).id
-      );
-
       // middlewares errors
       const errors = validationResult(req);
       if (!errors.isEmpty()) {
         return res.status(400).json({ errors: errors.array() });
       }
+
+      const params = req.body;
+      if (!req.headers.authorization)
+        return res.status(401).send({
+          action: "friendRequest",
+          msg: "tokenError",
+        });
+      const receiver = await getUsername(
+        jwtPayload(req.headers.authorization).id
+      );
 
       // Remove the applicant and sender from the friend requests list
       await Users.findOneAndUpdate(

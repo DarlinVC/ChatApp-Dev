@@ -76,15 +76,19 @@ userSchema.methods.comparePassword = async function (
   return await bcrypt.compare(password, this.password);
 };
 
+// declare type of "casesPush"
+interface CasesPush {
+  [key: string]: (...args: any[]) => void;
+}
+// To save all the functions that will be executed when a push is executed
+const casesPush: CasesPush = {
+  friendsRequestReceived: notifyFriendRequest,
+};
+
 userSchema.post<IUser>(
   "findOneAndUpdate",
   async function (this: any, next: NextFunction) {
     const update = this.getUpdate();
-
-    // To save all the functions that will be executed when a push is executed
-    const casesPush: any = {
-      friendsRequestReceived: notifyFriendRequest,
-    };
 
     if (update.$push) {
       // if the action exist in the "casesPush", that function will be execute
